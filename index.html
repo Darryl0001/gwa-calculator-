@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GWA Calculator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 1rem;
+      box-sizing: border-box;
+      background-color: #F5F0CD;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      margin-bottom: 2.5rem;
+      font-size:1.5rem;
+      text-transform: uppercase;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    input {
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+
+    button {
+      padding: 10px;
+      background-color: #81BFDA;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #81BFDA;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin-top: 20px;
+    }
+
+    li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      padding: 15px;
+      background-color: #f1f1f1;
+      border-radius: 8px;
+      transition: background 0.3s ease, transform 0.2s ease;
+    }
+
+    li:hover {
+      background-color: #81BFDA;
+      color: white;
+      transform: scale(1.05);
+    }
+
+    li .subject-info {
+      flex: 1;
+      font-size: 14px;
+      display:flex;
+      flex-direction: column;
+      gap:0.5rem;
+      padding:0.8rem 0;
+      justify-content: center;
+      position: relative;
+    }
+
+    li .subject-info div{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+    }
+    .sub-name{
+      font-style: italic;
+      font-weight: bold;
+      display:block;
+    }
+
+    li .delete-btn {
+      background: transparent;
+      color: #dc3545;
+      border: none;
+      border-radius: 5px;
+      padding: 5px 10px;
+      cursor: pointer;
+      font-size: 14px;
+      position: absolute;
+      top:0;
+      right: 0;
+      font-weight: bold;
+      font-size:1rem;
+    }
+    
+
+    li .delete-btn:hover {
+      background: #c82333;
+    }
+
+    .popup {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .popup-content {
+      background: #fff;
+      padding: 40px;
+      border-radius: 8px;
+      text-align: center;
+      position: relative;
+    }
+    #gwa-result{
+      width:100%;
+      border:1px solid #FADA7A;
+      font-size:1.2rem;
+      padding:4rem 0;
+      border-radius:50%;
+      background-clip: #f1f1f1;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      cursor: pointer;
+      font-size: 20px;
+      color: #888;
+    }
+    .info{
+      opacity: 0.3;
+      font-size:0.4rem;
+      font-style: italic;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 20px;
+      }
+
+      input, button {
+        padding: 13px;
+        font-size: 14px;
+      }
+
+      li {
+        font-size: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>GWA Calculator</h1>
+    <form id="add-subject-form">
+      <input type="text" id="subject-name" placeholder="Subject Name" required>
+      <input type="number" id="subject-units" placeholder="Units" min="1" required>
+      <input type="number" id="subject-grade" placeholder="Final Grade" step="0.01" min="1" max="5" required>
+      <button type="submit">Add Subject</button>
+    </form>
+    <ul id="subject-list"></ul>
+    <button id="calculate-btn">Calculate</button>
+  </div>
+  <div class="info">MOBILE FIRST DESIGN</div>
+
+  <div id="popup" class="popup">
+    <div class="popup-content">
+      <span class="close-btn" id="close-popup">&times;</span>
+      <h2>YOUR GWA IS :</h2>
+      <div id="gwa-result" >
+        
+      </div>
+      
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById("add-subject-form");
+    const subjectList = document.getElementById("subject-list");
+    const calculateBtn = document.getElementById("calculate-btn");
+    const popup = document.getElementById("popup");
+    const closePopup = document.getElementById("close-popup");
+    const gwaResult = document.getElementById("gwa-result");
+
+    let subjects = [];
+
+    // Function to add a subject
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+
+      const name = document.getElementById("subject-name").value;
+      const units = parseFloat(document.getElementById("subject-units").value);
+      const grade = parseFloat(document.getElementById("subject-grade").value);
+
+      if (units <= 0 || grade < 1 || grade > 5) {
+        alert("Invalid input. Please try again.");
+        return;
+      }
+
+      subjects.push({ name, units, grade });
+      renderSubjects();
+      form.reset();
+    });
+
+    // Function to render subjects
+    function renderSubjects() {
+      subjectList.innerHTML = "";
+
+      subjects.forEach((subject, index) => {
+        const li = document.createElement("li");
+        li.innerHTML = `
+          <div class="subject-info">
+            <span
+            class="sub-name" 
+            >${subject.name}</span>
+            <div>
+               <span>Grade : ${subject.grade}</span>
+               <span>Units : ${subject.units}</span>
+            </div>
+            <button class="delete-btn" onclick="deleteSubject(${index})">x</button>
+          </div>
+          
+        `;
+        subjectList.appendChild(li);
+      });
+    }
+
+    // Function to delete a subject
+    function deleteSubject(index) {
+      subjects.splice(index, 1);
+      renderSubjects();
+    }
+
+    // Function to calculate GWA
+    calculateBtn.addEventListener("click", () => {
+      if (subjects.length === 0) {
+        alert("No subjects added!");
+        return;
+      }
+
+      let totalWeightedGrades = 0;
+      let totalUnits = 0;
+
+      subjects.forEach((subject) => {
+        totalWeightedGrades += subject.grade * subject.units;
+        totalUnits += subject.units;
+      });
+
+      const gwa = totalWeightedGrades / totalUnits;
+      gwaResult.textContent = `${gwa.toFixed(2)}`;
+      popup.style.display = "flex";
+    });
+
+    // Close popup
+    closePopup.addEventListener("click", () => {
+      popup.style.display = "none";
+    });
+  </script>
+</body>
+</html>
